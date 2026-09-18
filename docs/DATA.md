@@ -13,7 +13,7 @@ Each snapshot records reporting period, publication date, retrieval timestamp, s
 
 ## Market history and refresh
 
-BBCA contains 244 bundled daily OHLCV sessions from 18 September 2025 through 18 September 2026. The source is Yahoo Finance’s public chart endpoint for `BBCA.JK`, classified as PUBLIC_SECONDARY prototype convenience data. It is not an IDX entitlement or live feed.
+BBCA contains 244 bundled daily HLCV sessions from 18 September 2025 through 18 September 2026. The legacy bundle does not retain the source open field, so it is not represented as full OHLCV. The source is Yahoo Finance’s public chart endpoint for `BBCA.JK`, classified as PUBLIC_SECONDARY prototype convenience data. It is not an IDX entitlement or live feed.
 
 Run `npm run data:update` to view the current refresh status. To normalize a reviewed local JSON capture:
 
@@ -21,7 +21,7 @@ Run `npm run data:update` to view the current refresh status. To normalize a rev
 npm run data:update -- --input /absolute/path/bbca.json --output src/data/bbcaPriceBars.ts
 ```
 
-The command does not fetch providers, scrape pages, bypass rate limits, or use credentials. It validates ticker, source, retrieval timestamp, ordered dates, finite OHLCV values, non-negative volume, and basic high/low consistency before atomically replacing the output. Invalid, empty, unreadable, or rate-limited input returns FAILED and leaves the prior valid output in place. Identical normalized content returns UNCHANGED.
+The command does not fetch providers, scrape pages, bypass rate limits, or use credentials. New input requires full OHLCV and validates ticker, source, retrieval timestamp, ordered dates, finite values, non-negative volume, and basic high/low consistency before atomically replacing the output. Invalid, empty, unreadable, or rate-limited input returns FAILED and leaves the prior valid output in place. Identical normalized content returns UNCHANGED.
 
 ## Issuer events
 

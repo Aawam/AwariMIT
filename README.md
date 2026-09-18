@@ -8,7 +8,7 @@ AwariMIT is a decision-support prototype for retail investors and swing-oriented
 
 - IHSG market context, with an explicitly dated bundled capture
 - BBCA reference-stock research workspace
-- 244 captured BBCA OHLCV sessions through 18 September 2026
+- 244 captured BBCA HLCV sessions through 18 September 2026; future refresh inputs require full OHLCV
 - Deterministic returns, MA20/50/200, relative volume, ATR14, volatility, price range and risk measures
 - Latest H1 2026 BCA issuer fundamentals, with FY2025 retained as a separate annual reference
 - REPORTED versus DERIVED metric labels, reporting periods, publication dates, source quality and source URLs
