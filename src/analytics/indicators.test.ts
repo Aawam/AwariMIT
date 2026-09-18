@@ -8,7 +8,7 @@ import { availableFundamentalEvidence, businessProfiles } from '../config/busine
 import { bbcaAnnualReference, bbcaH12026Snapshot, bbcaReference, bbcaTechnicalReference } from '../data/marketData'
 import type { Stock } from '../domain/types'
 // @ts-expect-error The executable refresh boundary is plain Node ESM, exercised here by Vitest.
-import { updateFromInput, validateMarketSnapshot } from '../../scripts/refresh-market-snapshot.mjs'
+import { normalizeCsvCapture, updateFromInput, validateMarketSnapshot } from '../../scripts/refresh-market-snapshot.mjs'
 
 const baseStock: Stock = {
   ticker: 'TEST', name: 'Test Company', sector: 'Test', profile: 'BANKING', description: 'Test fixture.',
@@ -18,7 +18,7 @@ const baseStock: Stock = {
   fundamentals: { roe: 15, revenueGrowth: 10, debtToEquity: 0.4, pe: 12 },
 }
 
-const validSnapshot = { ticker: 'BBCA', source: 'reviewed test capture', retrievedAt: '2026-09-18T02:46:57.000Z', bars: [{ date: '2026-09-17', open: 8000, high: 8100, low: 7950, close: 8050, volume: 1_000_000 }, { date: '2026-09-18', open: 8050, high: 8150, low: 8000, close: 8100, volume: 1_200_000 }] }
+const validSnapshot = { ticker: 'BBCA', source: 'reviewed test capture', sourceUrl: 'https://example.test/export', attribution: 'Example export attribution', exportedAt: '2026-09-18T02:45:00.000Z', retrievedAt: '2026-09-18T02:46:57.000Z', interval: '1d', currency: 'IDR', bars: [{ date: '2026-09-17', open: 8000, high: 8100, low: 7950, close: 8050, volume: 1_000_000 }, { date: '2026-09-18', open: 8050, high: 8150, low: 8000, close: 8100, volume: 1_200_000 }] }
 
 const riskStock = (priceHistory: number[], threeMonth: number, ma20: number, ma50: number, volatility20: number | null = null): Stock => ({
   ...baseStock,
@@ -96,6 +96,8 @@ describe('market refresh validation', () => {
     expect(validateMarketSnapshot({ ...validSnapshot, bars: [] })).not.toHaveLength(0)
     expect(validateMarketSnapshot({ ...validSnapshot, bars: [{ ...validSnapshot.bars[0], high: 7900 }] })).not.toHaveLength(0)
     expect(validateMarketSnapshot({ ...validSnapshot, bars: [...validSnapshot.bars].reverse() })).not.toHaveLength(0)
+    expect(validateMarketSnapshot({ ...validSnapshot, bars: [validSnapshot.bars[0], { ...validSnapshot.bars[0] }] })).not.toHaveLength(0)
+    expect(validateMarketSnapshot({ ...validSnapshot, attribution: '', bars: [{ ...validSnapshot.bars[0], volume: -1 }] })).not.toHaveLength(0)
   })
   it('preserves the previous valid output when input cannot be read', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'awarimit-refresh-'))
@@ -115,5 +117,17 @@ describe('market refresh validation', () => {
     expect((await updateFromInput(tlkmInput, tlkmOutput)).ticker).toBe('TLKM')
     expect(await readFile(bbcaOutput, 'utf8')).toBe(bbcaBefore)
     expect(await readFile(tlkmOutput, 'utf8')).toContain('tlkmPriceBars')
+  })
+  it('normalizes portable CSV metadata and rejects ticker mismatches or impossible bars', async () => {
+    const csv = '# ticker: TLKM\n# source: Authorized example export\n# source_url: https://example.test/export\n# attribution: Example data provider attribution\n# exported_at: 2026-09-18T02:45:00.000Z\n# retrieved_at: 2026-09-18T02:46:57.000Z\n# interval: 1d\n# currency: IDR\ndate,open,high,low,close,volume\n2026-09-17,2500,2550,2475,2525,1000000\n2026-09-18,2525,2600,2500,2575,1200000\n'
+    const normalized = normalizeCsvCapture(csv)
+    expect(normalized.snapshot?.ticker).toBe('TLKM')
+    expect(validateMarketSnapshot(normalized.snapshot, 'TLKM')).toHaveLength(0)
+    expect(validateMarketSnapshot(normalized.snapshot, 'BBCA')).not.toHaveLength(0)
+    expect(validateMarketSnapshot({ ...validSnapshot, bars: [{ ...validSnapshot.bars[0], low: 8200 }] })).not.toHaveLength(0)
+    const directory = await mkdtemp(join(tmpdir(), 'awarimit-csv-')); const input = join(directory, 'tlkm.csv'); const output = join(directory, 'tlkm.ts')
+    await writeFile(input, csv)
+    expect((await updateFromInput(input, output, 'TLKM')).status).toBe('UPDATED')
+    expect(await readFile(output, 'utf8')).toContain('Attribution: Example data provider attribution')
   })
 })

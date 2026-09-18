@@ -1,0 +1,11 @@
+# ticker: TICKER
+# source: Authorized provider or manual export name
+# source_url: https://provider.example/export-or-documentation
+# attribution: Required provider attribution and export context
+# exported_at: 2026-09-18T02:45:00.000Z
+# retrieved_at: 2026-09-18T02:46:57.000Z
+# interval: 1d
+# currency: IDR
+date,open,high,low,close,volume
+2026-09-17,2500,2550,2475,2525,1000000
+2026-09-18,2525,2600,2500,2575,1200000

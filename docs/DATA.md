@@ -15,13 +15,16 @@ Each snapshot records reporting period, publication date, retrieval timestamp, s
 
 BBCA contains 244 bundled daily HLCV sessions from 18 September 2025 through 18 September 2026. The legacy bundle does not retain the source open field, so it is not represented as full OHLCV. The source is Yahoo Finance’s public chart endpoint for `BBCA.JK`, classified as PUBLIC_SECONDARY prototype convenience data. It is not an IDX entitlement or live feed.
 
-Run `npm run data:ingest` to view the reviewed-capture ingestion status (`data:update` remains a compatible alias). To normalize any reviewed local JSON capture:
+Run `npm run data:ingest` to view the reviewed-capture ingestion status (`data:update` remains a compatible alias). The portable import contract accepts JSON or CSV, requires full daily OHLCV, and keeps source provenance in the capture itself. Templates are available at `examples/ohlcv-import.template.json` and `examples/ohlcv-import.template.csv`.
 
 ```text
-npm run data:ingest -- --input /absolute/path/TICKER.json --output src/data/tickerPriceBars.ts
+npm run data:ingest -- --ticker TICKER --input /absolute/path/TICKER.json --output src/data/tickerPriceBars.ts
+npm run data:ingest -- --ticker TICKER --input /absolute/path/TICKER.csv --output src/data/tickerPriceBars.ts
 ```
 
-The command does not fetch providers, scrape pages, bypass rate limits, or use credentials. New input requires full OHLCV and validates ticker, source, retrieval timestamp, ordered dates, finite values, non-negative volume, and basic high/low consistency before atomically replacing the output. Invalid, empty, unreadable, or rate-limited input returns FAILED and leaves the prior valid output in place. Identical normalized content returns UNCHANGED.
+JSON requires `ticker`, `source`, `sourceUrl`, `attribution`, `exportedAt`, `retrievedAt`, `interval` (`1d`), `currency`, and ordered `bars`. CSV requires the same metadata as `# key: value` lines before an exact `date,open,high,low,close,volume` header. `exportedAt` records the provider/manual-export time; `retrievedAt` records the AwariMIT capture/ingestion time.
+
+The command does not fetch providers, scrape pages, bypass rate limits, or use credentials. It rejects a `--ticker` mismatch, malformed/duplicate/out-of-order dates, missing provenance, non-finite or non-positive OHLC values, negative volume, and inconsistent high/low bars before atomically replacing the requested output. Invalid, empty, unreadable, or malformed input returns FAILED and leaves the prior valid output in place. Identical normalized content returns UNCHANGED.
 
 ## Issuer events
 

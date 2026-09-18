@@ -1,0 +1,14 @@
+{
+  "ticker": "TICKER",
+  "source": "Authorized provider or manual export name",
+  "sourceUrl": "https://provider.example/export-or-documentation",
+  "attribution": "Required provider attribution and export context",
+  "exportedAt": "2026-09-18T02:45:00.000Z",
+  "retrievedAt": "2026-09-18T02:46:57.000Z",
+  "interval": "1d",
+  "currency": "IDR",
+  "bars": [
+    { "date": "2026-09-17", "open": 2500, "high": 2550, "low": 2475, "close": 2525, "volume": 1000000 },
+    { "date": "2026-09-18", "open": 2525, "high": 2600, "low": 2500, "close": 2575, "volume": 1200000 }
+  ]
+}
