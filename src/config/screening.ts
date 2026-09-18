@@ -7,4 +7,10 @@ export const screeningWeights = {
   risk: 10,
 } as const
 
-export const scoringNotes = 'Scores are normalized across available factors. Missing data is excluded, never treated as zero. This is a candidate-quality screen, not a return forecast or trading recommendation.'
+export const confidenceThresholds = {
+  high: 85,
+  medium: 65,
+  limited: 45,
+} as const
+
+export const scoringNotes = 'Composite Score is normalized across available factors, while Evidence Coverage separately reports the configured weight represented by observed evidence. Missing data is excluded, never treated as zero. Score is candidate quality, not a return forecast or trading recommendation.'

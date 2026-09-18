@@ -8,9 +8,9 @@ AwariMIT is a decision-support prototype for retail investors and swing-oriented
 
 - IHSG market pulse and a transparent short-term regime label
 - Five liquid IDX seed names: BBCA, BMRI, TLKM, ASII and ANTM
-- Deterministic scoring for momentum, trend, liquidity, available fundamentals, valuation and drawdown risk
-- Search and minimum-score filtering
-- Stock-level price path, bull evidence, counter-thesis, score factors and provenance
+- Deterministic Composite Score plus separate Evidence Coverage and Confidence classifications
+- Search, minimum-score, evidence-coverage and confidence filtering
+- Stock-level Fundamental, Technical and News intelligence sections, missing-evidence disclosure, and provenance
 - Responsive single-page UI
 
 ## Run locally
@@ -40,7 +40,7 @@ V0 bundles a 16 September 2026 price capture from Yahoo Finance's unofficial cha
 
 ## Methodology
 
-The score is explainable candidate quality, not a recommendation. Initial weights are Momentum 25%, Technical 20%, Fundamental 20%, Liquidity 15%, Valuation 10%, Risk 10%. Missing inputs are excluded and weights are normalized over available evidence. See `docs/METHODOLOGY.md`.
+The Composite Score is explainable candidate quality, not a recommendation. Initial weights are Momentum 25%, Technical 20%, Fundamental 20%, Liquidity 15%, Valuation 10%, Risk 10%. Missing inputs are excluded and weights are normalized over available evidence, while Evidence Coverage separately shows how much configured evidence is present. Confidence is derived from configured coverage thresholds. See `docs/METHODOLOGY.md`.
 
 ## Documentation
 
