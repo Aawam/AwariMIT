@@ -16,4 +16,6 @@ ADR-006: `src/data/fundamentals.ts` keeps an H1 2026 snapshot and a separate FY2
 
 ADR-007: `scripts/refresh-market-snapshot.mjs` is an offline normalization boundary. It accepts a reviewed local JSON capture, validates it, renders deterministic TypeScript, and atomically replaces the target only after validation. It does not fetch, scrape, retry around rate limits, or depend on credentials. `src/data/manifest.ts` reports the current bundled snapshot lineage.
 
+ADR-008: Evaluation is stock-agnostic. A `Stock` carries a `BusinessProfile`, period-aware fundamental snapshots, and optional technical reference data. `src/config/businessProfiles.ts` defines the applicable fundamental evidence and presentation metrics for BANKING; the screener, risk engine, confidence framework, event model, and candidate status operate on `Stock`, not a ticker. BBCA is the first data subject for BANKING, not a special evaluation branch.
+
 V0.3B cross-sector validation is deferred, not replaced with less traceable data.

@@ -4,13 +4,14 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { maxDrawdown, movingAverage, percentageChange, relativeVolume } from './indicators'
 import { confidenceForCoverage, riskLevelFor, scoreStock, statusFor } from './screening'
+import { availableFundamentalEvidence, businessProfiles } from '../config/businessProfiles'
 import { bbcaAnnualReference, bbcaH12026Snapshot, bbcaReference, bbcaTechnicalReference } from '../data/marketData'
 import type { Stock } from '../domain/types'
 // @ts-expect-error The executable refresh boundary is plain Node ESM, exercised here by Vitest.
 import { updateFromInput, validateMarketSnapshot } from '../../scripts/refresh-market-snapshot.mjs'
 
 const baseStock: Stock = {
-  ticker: 'TEST', name: 'Test Company', sector: 'Test', description: 'Test fixture.',
+  ticker: 'TEST', name: 'Test Company', sector: 'Test', profile: 'BANKING', description: 'Test fixture.',
   price: { value: 120, source: 'test', period: 'test', retrievedAt: '2026-01-01T00:00:00.000Z', unit: 'IDR' },
   dailyChange: 1, averageTradedValue: 10_000_000_000, priceHistory: [100, 105, 110, 120],
   technical: { oneWeek: 2, oneMonth: 4, threeMonth: 10, ma20: 110, ma50: 105 },
@@ -29,6 +30,7 @@ describe('scoring integrity', () => {
   it('reports complete evidence and high confidence', () => { const result = scoreStock(baseStock); expect(result.score.coverage).toBe(100); expect(result.score.confidence).toBe('HIGH') })
   it('keeps a normalized score but reduces coverage when fundamental and valuation are missing', () => { const result = scoreStock({ ...baseStock, fundamentals: { roe: null, revenueGrowth: null, debtToEquity: null, pe: null } }); expect(result.score.total).not.toBeNull(); expect(result.score.coverage).toBe(70); expect(result.score.confidence).toBe('MEDIUM'); expect(result.score.missingFactors).toEqual(['fundamental', 'valuation']) })
   it('uses banking net-profit growth as valid fundamental evidence without requiring industrial metrics', () => { const result = scoreStock({ ...baseStock, fundamentals: { roe: null, netProfitGrowth: 1.8, revenueGrowth: null, debtToEquity: null, pe: null } }); expect(result.score.fundamental).not.toBeNull(); expect(result.score.missingFactors).toEqual(['valuation']) })
+  it('selects applicable banking evidence through the profile rather than a ticker', () => { expect(businessProfiles.BANKING.fundamentalEvidence).toEqual(['netProfitGrowth', 'roe']); expect(availableFundamentalEvidence('BANKING', { roe: 20, netProfitGrowth: 2, revenueGrowth: null, debtToEquity: null, pe: null })).toEqual([2, 20]) })
   it('gates a high score with sparse data as insufficient evidence', () => { const result = scoreStock({ ...baseStock, averageTradedValue: null, priceHistory: [100], technical: { oneWeek: null, oneMonth: null, threeMonth: 20, ma20: null, ma50: null }, fundamentals: { roe: null, revenueGrowth: null, debtToEquity: null, pe: null } }); expect(result.score.coverage).toBe(25); expect(result.score.total).toBeGreaterThan(75); expect(result.status).toBe('Insufficient Evidence') })
   it('classifies threshold boundaries transparently', () => { expect(confidenceForCoverage(85)).toBe('HIGH'); expect(confidenceForCoverage(84.99)).toBe('MEDIUM'); expect(confidenceForCoverage(65)).toBe('MEDIUM'); expect(confidenceForCoverage(64.99)).toBe('LIMITED'); expect(confidenceForCoverage(45)).toBe('LIMITED'); expect(confidenceForCoverage(44.99)).toBe('INSUFFICIENT') })
   it('keeps candidate status separate from risk level', () => { expect(statusFor(90, 'MEDIUM')).toBe('Candidate'); expect(riskLevelFor(0)).toBe('Low'); expect(riskLevelFor(34)).toBe('Moderate'); expect(riskLevelFor(67)).toBe('High') })

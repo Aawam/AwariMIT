@@ -11,10 +11,20 @@ const change = (period: number) => (closes.at(-1)! / closes.at(-1 - period)! - 1
 const trueRanges = bbcaPriceBars.slice(1).map((bar, index) => Math.max(bar.high - bar.low, Math.abs(bar.high - bbcaPriceBars[index].close), Math.abs(bar.low - bbcaPriceBars[index].close)))
 const point = (value: number, period: string, unit: string, source = marketSource, method?: string) => ({ value, source, period, retrievedAt: marketRetrievedAt, unit, method })
 
+export const bbcaTechnicalReference = {
+  ma200: point(average(closes.slice(-200)), '200 trading-day moving average ending 18 September 2026', 'IDR', marketSource, 'Simple moving average of bundled daily closes'),
+  relativeVolume: point(volumes.at(-1)! / average(volumes.slice(-20)), '18 September 2026 versus trailing 20 trading sessions', 'x', marketSource, 'Last-session volume / mean trailing 20-session volume'),
+  atr14: point(average(trueRanges.slice(-14)), '14 trading sessions ending 18 September 2026', 'IDR', marketSource, 'Simple average true range'),
+  volatility20: point(Math.sqrt(average(closes.slice(-20).slice(1).map((price, index) => ((price / closes.slice(-20)[index]) - 1) ** 2))) * 100, '20 trading sessions ending 18 September 2026', '%', marketSource, 'Root mean square daily return; not annualized'),
+  recentHigh: point(Math.max(...closes.slice(-20)), 'Trailing 20 trading sessions', 'IDR', marketSource),
+  recentLow: point(Math.min(...closes.slice(-20)), 'Trailing 20 trading sessions', 'IDR', marketSource),
+}
+
 export const bbcaReference: Stock = {
   ticker: 'BBCA',
   name: 'PT Bank Central Asia Tbk',
   sector: 'Financials · Banking',
+  profile: 'BANKING',
   description: 'Indonesian commercial bank. Reference stock with a bundled one-year price/volume capture and period-aware issuer fundamentals.',
   price: point(closes.at(-1)!, 'Daily close, 18 September 2026', 'IDR'),
   dailyChange: (closes.at(-1)! / closes.at(-2)! - 1) * 100,
@@ -31,15 +41,8 @@ export const bbcaReference: Stock = {
     period: bbcaH12026Snapshot.reportingPeriod,
     retrievedAt: bbcaH12026Snapshot.retrievedAt,
   },
-}
-
-export const bbcaTechnicalReference = {
-  ma200: point(average(closes.slice(-200)), '200 trading-day moving average ending 18 September 2026', 'IDR', marketSource, 'Simple moving average of bundled daily closes'),
-  relativeVolume: point(volumes.at(-1)! / average(volumes.slice(-20)), '18 September 2026 versus trailing 20 trading sessions', 'x', marketSource, 'Last-session volume / mean trailing 20-session volume'),
-  atr14: point(average(trueRanges.slice(-14)), '14 trading sessions ending 18 September 2026', 'IDR', marketSource, 'Simple average true range'),
-  volatility20: point(Math.sqrt(average(closes.slice(-20).slice(1).map((price, index) => ((price / closes.slice(-20)[index]) - 1) ** 2))) * 100, '20 trading sessions ending 18 September 2026', '%', marketSource, 'Root mean square daily return; not annualized'),
-  recentHigh: point(Math.max(...closes.slice(-20)), 'Trailing 20 trading sessions', 'IDR', marketSource),
-  recentLow: point(Math.min(...closes.slice(-20)), 'Trailing 20 trading sessions', 'IDR', marketSource),
+  fundamentalSnapshots: [...bbcaFundamentalSnapshots],
+  technicalReference: bbcaTechnicalReference,
 }
 
 export const bbcaFundamentalReference = bbcaAnnualReference

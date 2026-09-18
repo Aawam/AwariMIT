@@ -1,12 +1,13 @@
 export type DataPoint<T> = { value: T | null; source: string; period: string; retrievedAt: string; unit: string; method?: string }
 
 export type PeriodType = 'Q1' | 'H1' | '9M' | 'FY'
+export type BusinessProfile = 'BANKING'
 export type SourceQuality = 'OFFICIAL_ISSUER' | 'PUBLIC_SECONDARY'
 export type MetricStatus = 'REPORTED' | 'DERIVED'
 export type FundamentalMetric = { name: string; value: number | null; unit: string; status: MetricStatus; method?: string }
 export type FundamentalSnapshot = {
   ticker: string
-  sectorProfile: 'BANKING'
+  sectorProfile: BusinessProfile
   reportingPeriod: string
   periodType: PeriodType
   publicationDate: string
@@ -33,10 +34,20 @@ export type FundamentalMetrics = {
   retrievedAt?: string
 }
 
+export type TechnicalReference = {
+  ma200: DataPoint<number>
+  relativeVolume: DataPoint<number>
+  atr14: DataPoint<number>
+  volatility20: DataPoint<number>
+  recentHigh: DataPoint<number>
+  recentLow: DataPoint<number>
+}
+
 export type Stock = {
   ticker: string
   name: string
   sector: string
+  profile: BusinessProfile
   description: string
   price: DataPoint<number>
   dailyChange: number | null
@@ -44,6 +55,8 @@ export type Stock = {
   priceHistory: number[]
   technical: { oneWeek: number | null; oneMonth: number | null; threeMonth: number | null; ma20: number | null; ma50: number | null }
   fundamentals: FundamentalMetrics
+  fundamentalSnapshots?: FundamentalSnapshot[]
+  technicalReference?: TechnicalReference
 }
 
 export type Confidence = 'HIGH' | 'MEDIUM' | 'LIMITED' | 'INSUFFICIENT'

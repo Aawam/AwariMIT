@@ -35,7 +35,9 @@ No historical performance claim is made. A point-in-time evaluation is deferred 
 
 ## Banking profile
 
-BBCA uses the BANKING profile. Its compact fundamental evidence accepts issuer-reported ROE or bank-relevant net-profit growth; it does not require industrial metrics such as inventory turnover, gross margin, or EV/EBITDA. Missing required banking evidence still reduces coverage. FY valuation values remain an annual reference rather than being silently applied to H1 2026.
+The BANKING profile applies to any supported bank. Its compact fundamental evidence accepts issuer-reported ROE or bank-relevant net-profit growth; it does not require industrial metrics such as inventory turnover, gross margin, or EV/EBITDA. Missing required banking evidence still reduces coverage. FY valuation values remain an annual reference rather than being silently applied to an interim period.
+
+Fundamental evidence is profile-specific, while technical analysis, risk, liquidity, valuation, evidence coverage, confidence, candidate status, events, and provenance are shared. BBCA is the current BANKING validation subject, not a special-case evaluation rule.
 
 ## Reported and derived values
 

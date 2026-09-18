@@ -1,4 +1,5 @@
 import { confidenceThresholds, riskLevelThresholds, screeningWeights } from '../config/screening'
+import { availableFundamentalEvidence } from '../config/businessProfiles'
 import type { Confidence, RiskLevel, ScoreBreakdown, ScoreFactor, ScreeningResult, Stock } from '../domain/types'
 
 const clamp = (value: number) => Math.max(0, Math.min(100, value))
@@ -31,7 +32,8 @@ export function scoreStock(stock: Stock): ScreeningResult {
   const momentum = technical.threeMonth === null ? null : clamp(50 + technical.threeMonth * 5 + (technical.oneMonth ?? 0) * 2)
   const trend = stock.price.value === null || technical.ma20 === null || technical.ma50 === null ? null : clamp(50 + (stock.price.value / technical.ma20 - 1) * 500 + (technical.ma20 / technical.ma50 - 1) * 300)
   const growth = fundamentals.netProfitGrowth ?? fundamentals.revenueGrowth
-  const fundamental = fundamentals.roe === null && growth === null ? null : clamp(45 + (fundamentals.roe ?? 0) * 1.5 + (growth ?? 0) * 1.2 - Math.max(0, (fundamentals.debtToEquity ?? 0) - 1) * 10)
+  const profileEvidence = availableFundamentalEvidence(stock.profile, fundamentals)
+  const fundamental = profileEvidence.length === 0 ? null : clamp(45 + (fundamentals.roe ?? 0) * 1.5 + (growth ?? 0) * 1.2 - Math.max(0, (fundamentals.debtToEquity ?? 0) - 1) * 10)
   const liquidity = stock.averageTradedValue === null ? null : clamp(35 + Math.log10(Math.max(stock.averageTradedValue, 1)) * 5)
   const valuation = fundamentals.pe === null ? null : clamp(75 - Math.max(0, fundamentals.pe - 10) * 2)
   const drawdown = stock.priceHistory.length > 1 ? Math.min(...stock.priceHistory.map((price, index) => price / Math.max(...stock.priceHistory.slice(0, index + 1)))) : null
