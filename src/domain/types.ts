@@ -2,7 +2,7 @@ export type DataPoint<T> = { value: T | null; source: string; period: string; re
 
 export type NewsCategory = 'Earnings' | 'Corporate Action' | 'Contract' | 'Dividend' | 'Regulatory' | 'Commodity' | 'Management' | 'Macro' | 'Other'
 export type NewsSentiment = 'Positive' | 'Neutral' | 'Negative' | 'Unclear'
-export type NewsItem = { title: string; publisher: string; publishedAt: string; url: string; ticker: string; category: NewsCategory; relevance: 'High' | 'Medium' | 'Low'; sentiment: NewsSentiment; sourceType: 'Bundled sample' | 'Live provider' }
+export type NewsItem = { title: string; publisher: string; publishedAt: string; url: string; ticker: string; category: NewsCategory; relevance: 'High' | 'Medium' | 'Low'; sentiment: NewsSentiment; sourceType: 'Bundled sample' | 'Live provider' | 'Official filing' }
 
 export type FundamentalMetrics = {
   revenueGrowth: number | null

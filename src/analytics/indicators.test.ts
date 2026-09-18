@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { maxDrawdown, movingAverage, percentageChange, relativeVolume } from './indicators'
 import { confidenceForCoverage, scoreStock, statusFor } from './screening'
+import { bbcaFundamentalReference, bbcaReference, bbcaTechnicalReference } from '../data/marketData'
 import type { Stock } from '../domain/types'
 
 const baseStock: Stock = {
@@ -23,4 +24,13 @@ describe('scoring integrity', () => {
   it('gates a high score with sparse data as insufficient evidence', () => { const result = scoreStock({ ...baseStock, averageTradedValue: null, priceHistory: [100], technical: { oneWeek: null, oneMonth: null, threeMonth: 20, ma20: null, ma50: null }, fundamentals: { roe: null, revenueGrowth: null, debtToEquity: null, pe: null } }); expect(result.score.coverage).toBe(25); expect(result.score.total).toBeGreaterThan(75); expect(result.status).toBe('Insufficient Evidence') })
   it('classifies threshold boundaries transparently', () => { expect(confidenceForCoverage(85)).toBe('HIGH'); expect(confidenceForCoverage(84.99)).toBe('MEDIUM'); expect(confidenceForCoverage(65)).toBe('MEDIUM'); expect(confidenceForCoverage(64.99)).toBe('LIMITED'); expect(confidenceForCoverage(45)).toBe('LIMITED'); expect(confidenceForCoverage(44.99)).toBe('INSUFFICIENT') })
   it('does not produce strong candidate without high confidence', () => { expect(statusFor(90, 'MEDIUM', 80)).toBe('Candidate') })
+})
+
+describe('BBCA reference snapshot', () => {
+  it('retains a one-year price history and traceable issuer fundamentals', () => {
+    expect(bbcaReference.priceHistory).toHaveLength(244)
+    expect(bbcaTechnicalReference.ma200.value).toBeCloseTo(6818.125)
+    expect(bbcaFundamentalReference.netIncome.value).toBe(57_563)
+    expect(bbcaFundamentalReference.sourceUrl).toContain('bca.co.id')
+  })
 })
