@@ -13,4 +13,9 @@ export const confidenceThresholds = {
   limited: 45,
 } as const
 
-export const scoringNotes = 'Composite Score is normalized across available factors, while Evidence Coverage separately reports the configured weight represented by observed evidence. Missing data is excluded, never treated as zero. Score is candidate quality, not a return forecast or trading recommendation.'
+export const riskLevelThresholds = {
+  lowMax: 33,
+  moderateMax: 66,
+} as const
+
+export const scoringNotes = 'Composite Score is normalized across available factors, while Evidence Coverage separately reports the configured weight represented by observed evidence. The score uses Risk Quality (the inverse of Risk Score) as one configured factor. Risk Level is displayed separately and does not gate Candidate Status. Missing data is excluded, never treated as zero. Score is candidate quality, not a return forecast or trading recommendation.'

@@ -21,7 +21,13 @@ They are hypotheses for presenting evidence quality, not investment truths.
 
 ## Status gating
 
-Strong Candidate requires score ≥75 and HIGH confidence. A result with INSUFFICIENT confidence is always labelled Insufficient Evidence, even if a normalized score is high. High Risk is reserved for low risk-history scores. Other labels are Candidate, Watch, and Weak Setup.
+Strong Candidate requires score ≥75 and HIGH confidence. A result with INSUFFICIENT confidence is always labelled Insufficient Evidence, even if a normalized score is high. Candidate Status is limited to Strong Candidate, Candidate, Watch, Weak Setup, and Insufficient Evidence.
+
+## Risk semantics
+
+Risk Score is separate from Candidate Status: 0 is the lowest measured risk and 100 is the highest measured risk. The current deterministic input is captured-period drawdown, with negative momentum and weak short-term trend disclosed as drivers when present. Thresholds in `src/config/screening.ts` classify 0–33 as Low, 34–66 as Moderate, and 67–100 as High.
+
+The Composite Score uses the inverse, Risk Quality, for its configured 10% factor. Risk Level does not gate Candidate Status, so risk is not silently double-counted. This is a measurement of the bundled capture, not a prediction or a trading instruction.
 
 ## Validation limitation
 

@@ -3,7 +3,7 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { maxDrawdown, movingAverage, percentageChange, relativeVolume } from './indicators'
-import { confidenceForCoverage, scoreStock, statusFor } from './screening'
+import { confidenceForCoverage, riskLevelFor, scoreStock, statusFor } from './screening'
 import { bbcaAnnualReference, bbcaH12026Snapshot, bbcaReference, bbcaTechnicalReference } from '../data/marketData'
 import type { Stock } from '../domain/types'
 // @ts-expect-error The executable refresh boundary is plain Node ESM, exercised here by Vitest.
@@ -31,7 +31,7 @@ describe('scoring integrity', () => {
   it('uses banking net-profit growth as valid fundamental evidence without requiring industrial metrics', () => { const result = scoreStock({ ...baseStock, fundamentals: { roe: null, netProfitGrowth: 1.8, revenueGrowth: null, debtToEquity: null, pe: null } }); expect(result.score.fundamental).not.toBeNull(); expect(result.score.missingFactors).toEqual(['valuation']) })
   it('gates a high score with sparse data as insufficient evidence', () => { const result = scoreStock({ ...baseStock, averageTradedValue: null, priceHistory: [100], technical: { oneWeek: null, oneMonth: null, threeMonth: 20, ma20: null, ma50: null }, fundamentals: { roe: null, revenueGrowth: null, debtToEquity: null, pe: null } }); expect(result.score.coverage).toBe(25); expect(result.score.total).toBeGreaterThan(75); expect(result.status).toBe('Insufficient Evidence') })
   it('classifies threshold boundaries transparently', () => { expect(confidenceForCoverage(85)).toBe('HIGH'); expect(confidenceForCoverage(84.99)).toBe('MEDIUM'); expect(confidenceForCoverage(65)).toBe('MEDIUM'); expect(confidenceForCoverage(64.99)).toBe('LIMITED'); expect(confidenceForCoverage(45)).toBe('LIMITED'); expect(confidenceForCoverage(44.99)).toBe('INSUFFICIENT') })
-  it('does not produce strong candidate without high confidence', () => { expect(statusFor(90, 'MEDIUM', 80)).toBe('Candidate') })
+  it('keeps candidate status separate from risk level', () => { expect(statusFor(90, 'MEDIUM')).toBe('Candidate'); expect(riskLevelFor(0)).toBe('Low'); expect(riskLevelFor(34)).toBe('Moderate'); expect(riskLevelFor(67)).toBe('High') })
 })
 
 describe('BBCA period-aware snapshots', () => {
@@ -46,6 +46,8 @@ describe('BBCA period-aware snapshots', () => {
     expect(bbcaAnnualReference.sourceUrl).toContain('bca.co.id')
     expect(scoreStock(bbcaReference).score.coverage).toBe(90)
     expect(scoreStock(bbcaReference).score.confidence).toBe('HIGH')
+    expect(scoreStock(bbcaReference).score.riskLevel).toBe('High')
+    expect(scoreStock(bbcaReference).status).toBe('Watch')
   })
 })
 
