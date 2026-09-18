@@ -1,11 +1,30 @@
 export type DataPoint<T> = { value: T | null; source: string; period: string; retrievedAt: string; unit: string; method?: string }
 
+export type PeriodType = 'Q1' | 'H1' | '9M' | 'FY'
+export type SourceQuality = 'OFFICIAL_ISSUER' | 'PUBLIC_SECONDARY'
+export type MetricStatus = 'REPORTED' | 'DERIVED'
+export type FundamentalMetric = { name: string; value: number | null; unit: string; status: MetricStatus; method?: string }
+export type FundamentalSnapshot = {
+  ticker: string
+  sectorProfile: 'BANKING'
+  reportingPeriod: string
+  periodType: PeriodType
+  publicationDate: string
+  retrievedAt: string
+  source: string
+  sourceUrl: string
+  sourceQuality: SourceQuality
+  consolidation: 'Consolidated' | 'Parent-only'
+  metrics: FundamentalMetric[]
+}
+
 export type NewsCategory = 'Earnings' | 'Corporate Action' | 'Contract' | 'Dividend' | 'Regulatory' | 'Commodity' | 'Management' | 'Macro' | 'Other'
 export type NewsSentiment = 'Positive' | 'Neutral' | 'Negative' | 'Unclear'
 export type NewsItem = { title: string; publisher: string; publishedAt: string; url: string; ticker: string; category: NewsCategory; relevance: 'High' | 'Medium' | 'Low'; sentiment: NewsSentiment; sourceType: 'Bundled sample' | 'Live provider' | 'Official filing' }
 
 export type FundamentalMetrics = {
   revenueGrowth: number | null
+  netProfitGrowth?: number | null
   roe: number | null
   debtToEquity: number | null
   pe: number | null

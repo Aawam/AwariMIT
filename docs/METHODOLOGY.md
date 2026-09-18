@@ -26,3 +26,11 @@ Strong Candidate requires score ≥75 and HIGH confidence. A result with INSUFFI
 ## Validation limitation
 
 No historical performance claim is made. A point-in-time evaluation is deferred because this bundled capture has only a short, non-versioned price window and incomplete fundamental publication dates. Building a valid no-look-ahead evaluation from it would create false confidence.
+
+## Banking profile
+
+BBCA uses the BANKING profile. Its compact fundamental evidence accepts issuer-reported ROE or bank-relevant net-profit growth; it does not require industrial metrics such as inventory turnover, gross margin, or EV/EBITDA. Missing required banking evidence still reduces coverage. FY valuation values remain an annual reference rather than being silently applied to H1 2026.
+
+## Reported and derived values
+
+Issuer statements are marked REPORTED. Deterministic calculations such as H1 net-profit growth are marked DERIVED and state their method. Derived values are not presented as issuer-reported facts. Publication date, rather than retrieval date, establishes the period-aware availability of issuer fundamentals.
