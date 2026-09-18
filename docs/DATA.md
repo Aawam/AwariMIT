@@ -15,10 +15,10 @@ Each snapshot records reporting period, publication date, retrieval timestamp, s
 
 BBCA contains 244 bundled daily HLCV sessions from 18 September 2025 through 18 September 2026. The legacy bundle does not retain the source open field, so it is not represented as full OHLCV. The source is Yahoo Finance’s public chart endpoint for `BBCA.JK`, classified as PUBLIC_SECONDARY prototype convenience data. It is not an IDX entitlement or live feed.
 
-Run `npm run data:update` to view the current refresh status. To normalize a reviewed local JSON capture:
+Run `npm run data:ingest` to view the reviewed-capture ingestion status (`data:update` remains a compatible alias). To normalize any reviewed local JSON capture:
 
 ```text
-npm run data:update -- --input /absolute/path/bbca.json --output src/data/bbcaPriceBars.ts
+npm run data:ingest -- --input /absolute/path/TICKER.json --output src/data/tickerPriceBars.ts
 ```
 
 The command does not fetch providers, scrape pages, bypass rate limits, or use credentials. New input requires full OHLCV and validates ticker, source, retrieval timestamp, ordered dates, finite values, non-negative volume, and basic high/low consistency before atomically replacing the output. Invalid, empty, unreadable, or rate-limited input returns FAILED and leaves the prior valid output in place. Identical normalized content returns UNCHANGED.
@@ -27,9 +27,9 @@ The command does not fetch providers, scrape pages, bypass rate limits, or use c
 
 `NewsProvider` currently presents official issuer filing facts and issuer events, not live news. Every record includes its publication date and source URL. No market outcome or trade signal is inferred.
 
-## Deferred cross-sector validation
+## Cross-sector validation limitation
 
-V0.3B is DEFERRED. The proposed TLKM reference stock had traceable official fundamentals but no sufficiently reproducible OHLCV capture during V0.3 work because available public endpoints rate-limited or returned anti-bot challenges. No substitute stock or fabricated data was used.
+V0.3 is complete, but its cross-sector empirical proof is carried forward. TLKM had traceable official fundamentals but no sufficiently reproducible OHLCV capture during V0.3 work because available public endpoints rate-limited or returned anti-bot challenges. No substitute stock or fabricated data was used. V0.4 market-data qualification did not establish a production-safe automated multi-ticker IDX OHLCV path; see `docs/MARKET_DATA_QUALIFICATION.md`.
 
 ## Constraints
 

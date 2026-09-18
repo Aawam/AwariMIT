@@ -1,5 +1,10 @@
 export type DataPoint<T> = { value: T | null; source: string; period: string; retrievedAt: string; unit: string; method?: string }
 
+export type PriceBar = { date: string; open: number; high: number; low: number; close: number; volume: number }
+export type HistoryRequest = { interval: '1d'; from?: string; to?: string }
+export type MarketHistoryResult = { ticker: string; bars: PriceBar[]; source: string; retrievedAt: string; interval: '1d'; currency: string }
+export interface MarketDataProvider { getHistory(ticker: string, options: HistoryRequest): Promise<MarketHistoryResult> }
+
 export type PeriodType = 'Q1' | 'H1' | '9M' | 'FY'
 export type BusinessProfile = 'BANKING'
 export type SourceQuality = 'OFFICIAL_ISSUER' | 'PUBLIC_SECONDARY'

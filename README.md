@@ -2,7 +2,7 @@
 
 Market Intelligence Tools for a disciplined Indonesia-market research workflow.
 
-AwariMIT is a decision-support prototype for retail investors and swing-oriented researchers. V0.3A treats BBCA as a single reference stock with period-aware issuer fundamentals and validated static snapshots. It is not a broker, auto-trader, buy/sell signal, or return forecast.
+AwariMIT is a decision-support prototype for retail investors and swing-oriented researchers. V0.3 is complete: it established a stock-agnostic profile-driven architecture with BBCA as the initial BANKING validation subject. Cross-sector empirical validation remains unproven until a non-bank stock has both traceable issuer fundamentals and reproducible OHLCV history. It is not a broker, auto-trader, buy/sell signal, or return forecast.
 
 ## Current scope
 
@@ -12,7 +12,7 @@ AwariMIT is a decision-support prototype for retail investors and swing-oriented
 - Deterministic returns, MA20/50/200, relative volume, ATR14, volatility, price range and risk measures
 - Latest H1 2026 BCA issuer fundamentals, with FY2025 retained as a separate annual reference
 - REPORTED versus DERIVED metric labels, reporting periods, publication dates, source quality and source URLs
-- Safe local market-snapshot normalization via `npm run data:update`
+- Safe local reviewed-capture ingestion via `npm run data:ingest` (`data:update` remains compatible)
 - Composite Score, Evidence Coverage, Confidence, missing-evidence disclosure and status gating
 
 ## Run locally
@@ -29,11 +29,12 @@ npm test
 npm run lint
 npm run build
 npm run data:update
+npm run data:ingest
 ```
 
 ## Data and limitations
 
-BBCA market history is a bundled Yahoo Finance public chart capture, retrieved 2026-09-18T02:46:57Z. It is not live and Yahoo is not a production entitlement. Latest fundamentals are from BCA's issuer-published H1 2026 report, while FY2025 remains a separate annual reference. No credentials, API keys, paid providers or untraceable AI-generated market claims are used. Cross-sector validation is deferred because TLKM OHLCV data was not sufficiently traceable/reproducible. See `docs/DATA.md`.
+BBCA market history is a bundled Yahoo Finance public chart capture, retrieved 2026-09-18T02:46:57Z. It is not live and Yahoo is not a production entitlement. Latest fundamentals are from BCA's issuer-published H1 2026 report, while FY2025 remains a separate annual reference. No credentials, API keys, paid providers or untraceable AI-generated market claims are used. Cross-sector validation remains blocked because no non-bank candidate has a sufficiently traceable, reproducible OHLCV path. See `docs/DATA.md` and `docs/MARKET_DATA_QUALIFICATION.md`.
 
 ## Documentation
 
@@ -42,3 +43,4 @@ BBCA market history is a bundled Yahoo Finance public chart capture, retrieved 2
 - `docs/DATA.md`
 - `docs/PRODUCT.md`
 - `docs/ROADMAP.md`
+- `docs/MARKET_DATA_QUALIFICATION.md`

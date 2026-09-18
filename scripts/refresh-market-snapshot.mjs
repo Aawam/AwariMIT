@@ -66,16 +66,15 @@ export async function updateFromInput(inputPath, outputPath) {
 async function main() {
   const inputIndex = process.argv.indexOf('--input')
   const outputIndex = process.argv.indexOf('--output')
-  console.log('AwariMIT data refresh')
+  console.log('AwariMIT reviewed market-capture ingestion')
   if (inputIndex === -1 || outputIndex === -1) {
-    console.log('BBCA market: SKIPPED (no reviewed input capture supplied)')
-    console.log('BBCA fundamentals: UNCHANGED (H1 2026 official snapshot)')
-    console.log('BBCA events: UNCHANGED (official filing records)')
-    console.log('Usage: npm run data:update -- --input /path/bbca.json --output src/data/bbcaPriceBars.ts')
+    console.log('Market capture: SKIPPED (no reviewed input capture supplied)')
+    console.log('No provider was fetched. Existing per-stock fundamentals and events are unchanged.')
+    console.log('Usage: npm run data:ingest -- --input /path/TICKER.json --output src/data/tickerPriceBars.ts')
     return
   }
   const result = await updateFromInput(process.argv[inputIndex + 1], process.argv[outputIndex + 1])
-  console.log(`BBCA market: ${result.status}`)
+  console.log(`${result.ticker ?? 'Market'} capture: ${result.status}`)
   if (result.status === 'FAILED') {
     for (const error of result.errors) console.log(`- ${error}`)
     process.exitCode = 1
@@ -84,8 +83,7 @@ async function main() {
   console.log(`sessions: ${result.sessions}`)
   console.log(`latest: ${result.latestSession}`)
   console.log(`snapshot: ${result.digest}`)
-  console.log('BBCA fundamentals: UNCHANGED (H1 2026 official snapshot)')
-  console.log('BBCA events: UNCHANGED (official filing records)')
+  console.log('Fundamentals and events: UNCHANGED (market ingestion does not fetch or alter them)')
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main()
