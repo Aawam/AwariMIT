@@ -25,9 +25,9 @@ Strong Candidate requires score ≥75 and HIGH confidence. A result with INSUFFI
 
 ## Risk semantics
 
-Risk Score is separate from Candidate Status: 0 is the lowest measured risk and 100 is the highest measured risk. The current deterministic input is captured-period drawdown, with negative momentum and weak short-term trend disclosed as drivers when present. Thresholds in `src/config/screening.ts` classify 0–33 as Low, 34–66 as Moderate, and 67–100 as High.
+Risk Score is separate from Candidate Status: 0 is the lowest measured risk and 100 is the highest measured risk. The deterministic assessment has three transparent contribution caps configured in `src/config/screening.ts`: captured-period drawdown up to 70 points, momentum/trend weakness up to 20 points, and 20-day volatility up to 10 points. Momentum and trend are overlapping price-weakness measures, so only their larger normalized value contributes; they are not added together.
 
-The Composite Score uses the inverse, Risk Quality, for its configured 10% factor. Risk Level does not gate Candidate Status, so risk is not silently double-counted. This is a measurement of the bundled capture, not a prediction or a trading instruction.
+Drawdown reaches its full 70-point contribution at a 50% captured-period drawdown. Volatility begins contributing above 1% and reaches its full contribution at 5%. Thresholds classify 0–33 as Low, 34–66 as Moderate, and 67–100 as High. The Composite Score uses the inverse, Risk Quality, for its configured 10% factor. Risk Level does not gate Candidate Status, so risk is not silently double-counted. Missing evidence changes Coverage and Confidence, not Risk Score. This is a measurement of the bundled capture, not a prediction or a trading instruction.
 
 ## Validation limitation
 

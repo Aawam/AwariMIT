@@ -18,4 +18,10 @@ export const riskLevelThresholds = {
   moderateMax: 66,
 } as const
 
+export const riskCalibration = {
+  drawdown: { maxDrawdownPercent: 50, maxContribution: 70 },
+  priceWeakness: { maxNegativeThreeMonthReturn: 30, maxContribution: 20 },
+  volatility: { baselinePercent: 1, fullRiskPercent: 5, maxContribution: 10 },
+} as const
+
 export const scoringNotes = 'Composite Score is normalized across available factors, while Evidence Coverage separately reports the configured weight represented by observed evidence. The score uses Risk Quality (the inverse of Risk Score) as one configured factor. Risk Level is displayed separately and does not gate Candidate Status. Missing data is excluded, never treated as zero. Score is candidate quality, not a return forecast or trading recommendation.'

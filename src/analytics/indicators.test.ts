@@ -3,7 +3,7 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { maxDrawdown, movingAverage, percentageChange, relativeVolume } from './indicators'
-import { confidenceForCoverage, riskLevelFor, scoreStock, statusFor } from './screening'
+import { calculateRiskAssessment, confidenceForCoverage, riskLevelFor, scoreStock, statusFor } from './screening'
 import { availableFundamentalEvidence, businessProfiles } from '../config/businessProfiles'
 import { bbcaAnnualReference, bbcaH12026Snapshot, bbcaReference, bbcaTechnicalReference } from '../data/marketData'
 import type { Stock } from '../domain/types'
@@ -20,6 +20,14 @@ const baseStock: Stock = {
 
 const validSnapshot = { ticker: 'BBCA', source: 'reviewed test capture', retrievedAt: '2026-09-18T02:46:57.000Z', bars: [{ date: '2026-09-17', open: 8000, high: 8100, low: 7950, close: 8050, volume: 1_000_000 }, { date: '2026-09-18', open: 8050, high: 8150, low: 8000, close: 8100, volume: 1_200_000 }] }
 
+const riskStock = (priceHistory: number[], threeMonth: number, ma20: number, ma50: number, volatility20: number | null = null): Stock => ({
+  ...baseStock,
+  price: { ...baseStock.price, value: priceHistory.at(-1) ?? null },
+  priceHistory,
+  technical: { oneWeek: threeMonth / 12, oneMonth: threeMonth / 3, threeMonth, ma20, ma50 },
+  technicalReference: volatility20 === null ? undefined : { ma200: { ...baseStock.price, value: ma50 }, relativeVolume: { ...baseStock.price, value: 1 }, atr14: { ...baseStock.price, value: 1 }, volatility20: { ...baseStock.price, value: volatility20, unit: '%' }, recentHigh: { ...baseStock.price, value: Math.max(...priceHistory) }, recentLow: { ...baseStock.price, value: Math.min(...priceHistory) } },
+})
+
 describe('indicators', () => {
   it('calculates an average only with enough observations', () => { expect(movingAverage([1, 2, 3], 2)).toBe(2.5); expect(movingAverage([1, 2], 3)).toBeNull() })
   it('does not turn missing or invalid inputs into zero', () => { expect(percentageChange(null, 1)).toBeNull(); expect(relativeVolume(20, 0)).toBeNull() })
@@ -34,6 +42,28 @@ describe('scoring integrity', () => {
   it('gates a high score with sparse data as insufficient evidence', () => { const result = scoreStock({ ...baseStock, averageTradedValue: null, priceHistory: [100], technical: { oneWeek: null, oneMonth: null, threeMonth: 20, ma20: null, ma50: null }, fundamentals: { roe: null, revenueGrowth: null, debtToEquity: null, pe: null } }); expect(result.score.coverage).toBe(25); expect(result.score.total).toBeGreaterThan(75); expect(result.status).toBe('Insufficient Evidence') })
   it('classifies threshold boundaries transparently', () => { expect(confidenceForCoverage(85)).toBe('HIGH'); expect(confidenceForCoverage(84.99)).toBe('MEDIUM'); expect(confidenceForCoverage(65)).toBe('MEDIUM'); expect(confidenceForCoverage(64.99)).toBe('LIMITED'); expect(confidenceForCoverage(45)).toBe('LIMITED'); expect(confidenceForCoverage(44.99)).toBe('INSUFFICIENT') })
   it('keeps candidate status separate from risk level', () => { expect(statusFor(90, 'MEDIUM')).toBe('Candidate'); expect(riskLevelFor(0)).toBe('Low'); expect(riskLevelFor(34)).toBe('Moderate'); expect(riskLevelFor(67)).toBe('High') })
+})
+
+describe('risk calibration', () => {
+  it('classifies healthy, mixed, weak, and severe setups predictably', () => {
+    expect(scoreStock(riskStock([100, 105, 110, 120], 10, 110, 105)).score.riskLevel).toBe('Low')
+    expect(scoreStock(riskStock([100, 120, 90], -6, 100, 105)).score.riskLevel).toBe('Moderate')
+    expect(scoreStock(riskStock([100, 120, 72], -15, 85, 95)).score.riskLevel).toBe('High')
+    expect(scoreStock(riskStock([100, 120, 48], -40, 70, 90, 5)).score.riskScore).toBe(100)
+  })
+  it('is monotonic for worsening drawdown, momentum, and volatility', () => {
+    const mild = scoreStock(riskStock([100, 120, 100], -3, 105, 108, 2)).score.riskScore ?? 0
+    expect(scoreStock(riskStock([100, 120, 80], -3, 90, 100, 2)).score.riskScore).toBeGreaterThanOrEqual(mild)
+    expect(scoreStock(riskStock([100, 120, 100], -20, 105, 108, 2)).score.riskScore).toBeGreaterThanOrEqual(mild)
+    expect(scoreStock(riskStock([100, 120, 100], -3, 105, 108, 5)).score.riskScore).toBeGreaterThanOrEqual(mild)
+  })
+  it('aggregates contributions without treating missing evidence as risk', () => {
+    const stock = riskStock([100, 120, 72], -15, 85, 95, 3)
+    const assessment = calculateRiskAssessment(stock, 0)
+    expect(assessment.score).toBeCloseTo(assessment.components.reduce((total, component) => total + (component.contribution ?? 0), 0))
+    expect(scoreStock({ ...stock, fundamentals: { roe: null, revenueGrowth: null, debtToEquity: null, pe: null } }).score.riskScore).toBe(scoreStock(stock).score.riskScore)
+    expect(statusFor(48, 'HIGH')).toBe('Watch')
+  })
 })
 
 describe('BBCA period-aware snapshots', () => {

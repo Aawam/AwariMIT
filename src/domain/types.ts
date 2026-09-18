@@ -61,6 +61,8 @@ export type Stock = {
 
 export type Confidence = 'HIGH' | 'MEDIUM' | 'LIMITED' | 'INSUFFICIENT'
 export type RiskLevel = 'Low' | 'Moderate' | 'High' | 'Unavailable'
+export type RiskComponent = { key: 'drawdown' | 'priceWeakness' | 'volatility'; label: string; rawValue: number | null; normalizedRisk: number | null; weight: number; contribution: number | null }
+export type RiskAssessment = { score: number | null; level: RiskLevel; quality: number | null; components: RiskComponent[]; drivers: string[] }
 export type ScoreFactor = 'momentum' | 'technical' | 'fundamental' | 'liquidity' | 'valuation' | 'risk'
-export type ScoreBreakdown = Record<ScoreFactor, number | null> & { total: number | null; availableWeight: number; coverage: number; confidence: Confidence; missingFactors: ScoreFactor[]; riskScore: number | null; riskLevel: RiskLevel; riskDrivers: string[] }
+export type ScoreBreakdown = Record<ScoreFactor, number | null> & { total: number | null; availableWeight: number; coverage: number; confidence: Confidence; missingFactors: ScoreFactor[]; riskAssessment: RiskAssessment; riskScore: number | null; riskLevel: RiskLevel; riskDrivers: string[] }
 export type ScreeningResult = Stock & { score: ScoreBreakdown; status: string; reasons: string[]; risks: string[] }
