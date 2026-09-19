@@ -32,9 +32,19 @@ The command does not fetch providers, scrape pages, bypass rate limits, or use c
 
 `NewsProvider` currently presents official issuer filing facts and issuer events, not live news. Every record includes its publication date and source URL. No market outcome or trade signal is inferred.
 
+## TLKM acquisition proof
+
+`src/data/tlkmFundamentalSnapshot.ts` is an acquisition-only, period-aware official issuer snapshot. It is deliberately not connected to the UI, scoring, or a BusinessProfile. Generate it with:
+
+```text
+npm run data:fetch:telkom-fundamentals -- --output src/data/tlkmFundamentalSnapshot.ts
+```
+
+The adapter fetches Telkom's published 2Q 2026 consolidated financial-statement PDF, uses the existing `pypdf` text-layer extractor, and validates the resulting snapshot before an atomic write. It preserves ticker, metric key, value, unit, H1 period, 31 July 2026 issue date, official source URL, `OFFICIAL_ISSUER` quality, `REPORTED` metric status, and `Consolidated` basis. It does not use OCR, infer missing values, or introduce a TELECOM profile. Details and the observed document checksum are in `docs/MARKET_DATA_REUSE_DECISIONS.md`.
+
 ## Cross-sector validation limitation
 
-V0.3 is complete, but its cross-sector empirical proof is carried forward. TLKM had traceable official fundamentals but no sufficiently reproducible OHLCV capture during V0.3 work because available public endpoints rate-limited or returned anti-bot challenges. No substitute stock or fabricated data was used. V0.4 market-data qualification did not establish a production-safe automated multi-ticker IDX OHLCV path; see `docs/MARKET_DATA_QUALIFICATION.md`.
+V0.3 is complete, but its cross-sector empirical proof is carried forward. TLKM now has an OBSERVED reusable OHLCV capture path and an OBSERVED official H1 2026 fundamental snapshot. The next bounded phase may implement a TELECOM BusinessProfile against this evidence; no profile, evaluation behavior, or UI path has been added in this acquisition phase.
 
 ## Constraints
 

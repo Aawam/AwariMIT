@@ -9,10 +9,10 @@ export type PeriodType = 'Q1' | 'H1' | '9M' | 'FY'
 export type BusinessProfile = 'BANKING'
 export type SourceQuality = 'OFFICIAL_ISSUER' | 'PUBLIC_SECONDARY'
 export type MetricStatus = 'REPORTED' | 'DERIVED'
-export type FundamentalMetric = { name: string; value: number | null; unit: string; status: MetricStatus; method?: string }
+export type FundamentalMetric = { key?: string; name: string; value: number | null; unit: string; status: MetricStatus; method?: string }
 export type FundamentalSnapshot = {
   ticker: string
-  sectorProfile: BusinessProfile
+  sectorProfile?: BusinessProfile
   reportingPeriod: string
   periodType: PeriodType
   publicationDate: string

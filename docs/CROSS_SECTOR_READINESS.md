@@ -6,11 +6,11 @@ This is a data-path assessment, not an investment assessment. BBCA remains the i
 
 - Business drivers: telecom usage, subscriber/customer base, ARPU, capex, and cash-flow economics.
 - Official fundamental source: Telkom Investor Relations [Reports](https://www.telkom.co.id/sites/investor-relations/en_US/page/reports-1027).
-- Latest observed report: H1 2026 consolidated financial statements, six months ended 30 June 2026, unaudited; published through the Telkom reports page.
-- OHLCV paths: Yahoo `TLKM.JK` returned HTTP 429; Stooq `tlkm.id` returned an HTML verification challenge; EODHD's demo route returned HTTP 403.
-- History availability: no attributable, reproducible OHLCV capture was obtained for MA20/50/200, ATR, relative volume, and available-period range.
+- Latest observed report: H1 2026 consolidated financial statements, six months ended 30 June 2026, unaudited; issue date 31 July 2026. The official issuer PDF was fetched and deterministically parsed into `src/data/tlkmFundamentalSnapshot.ts` without OCR.
+- OHLCV path: the reusable Hermes `saham_idn` adapter returned 480 full daily OHLCV bars for `TLKM.JK` and writes through AwariMIT's existing validated snapshot path.
+- History availability: reproducible daily OHLCV is now established. The captured official metrics include total assets, total equity, revenue, operating profit, profit for the period, basic EPS, and operating cash flow.
 - Potential reusable profile: TELECOM, using issuer-reported revenue, EBITDA/margin, capex, cash flow, subscriber/ARPU evidence where traceable.
-- Readiness: NOT READY.
+- Readiness: READY FOR CROSS-SECTOR IMPLEMENTATION. The remaining work is a separately reviewed TELECOM BusinessProfile and integration; neither is implemented here.
 
 ## ANTM — Mining / metals
 
@@ -32,4 +32,4 @@ This is a data-path assessment, not an investment assessment. BBCA remains the i
 
 ## Conclusion
 
-No V0.4 cross-sector subject is proposed. TLKM remains the clearest profile test if a legitimate OHLCV source becomes available, but it does not meet the current reproducibility gate. The provider findings are recorded in `docs/MARKET_DATA_QUALIFICATION.md`. A candidate becomes READY only when official/strongly traceable fundamentals and attributable, reproducible OHLCV history are both available without bypassing controls or adding unapproved credentials.
+TLKM is the first cross-sector implementation subject with both official/strongly traceable fundamentals and attributable, reproducible OHLCV history, without bypassing controls or adding credentials. This document does not create a TELECOM profile or claim an investment conclusion. Provider findings are recorded in `docs/MARKET_DATA_QUALIFICATION.md` and `docs/MARKET_DATA_REUSE_DECISIONS.md`.

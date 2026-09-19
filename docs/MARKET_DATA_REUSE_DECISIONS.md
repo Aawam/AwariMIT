@@ -40,6 +40,18 @@ The result remains a dated, attributable snapshot. On provider, JSON, ticker, or
 
 ## Remaining gaps
 
-- An authorized, reliable fundamental acquisition path that maps official issuer/IDX disclosures into period-aware `FundamentalSnapshot` records.
 - An application-level RSS adapter and news snapshot policy; reuse is available but not yet needed for the OHLCV unblock.
 - A qualified production market-data entitlement if unattended refresh reliability, redistribution, or service guarantees are required.
+
+## Fundamental provider reuse audit
+
+| Source | Capability | Classification | Evidence | Decision |
+| --- | --- | --- | --- | --- |
+| `hermes-market-skills` `skills/saham_idn/feeds.py` | yfinance `Ticker.info` quote fields | REJECT | PROJECTED for period-aware IDX fundamentals | It supplies secondary, potentially sparse point-in-time fields without an issuer reporting period, publication date, consolidation basis, or filing URL. |
+| `IDX-API` `src/Company/index.ts` | `GetFinancialReport` and financial-ratio endpoint knowledge | REFERENCE ONLY | UNAVAILABLE | The official IDX financial-report route returned HTTP 403 here, including its session/header sequence. Its Deno/SQLite sync application remains out of scope. |
+| Telkom Investor Relations reports page | Official linked financial-statement PDF | WRAP AS PROVIDER | OBSERVED | The reports page and 2Q 2026 English PDF returned HTTP 200. The PDF has a text layer and declares its period, issue date, consolidated basis, and table units. |
+| `pypdf` `PdfReader.extract_text` | Deterministic text-layer extraction | REUSE DIRECTLY | OBSERVED | The existing environment helper extracted the required official-statement pages without OCR. No parser package was added to AwariMIT. |
+
+`scripts/capture-telkom-fundamentals.mjs` wraps the official Telkom PDF and invokes `pypdf` only for pages 1–5 statement text. It validates document identity and period, extracts only named reported values, validates a canonical `FundamentalSnapshot`, and atomically writes `src/data/tlkmFundamentalSnapshot.ts`. It contains no TELECOM BusinessProfile, evaluation, scoring, or UI behavior.
+
+Observed TLKM snapshot: H1 2026, six months ended 30 June 2026; issued 31 July 2026; consolidated; unaudited; values in IDR billion except EPS. The issuer PDF is at `https://www.telkom.co.id/minio/show/data/lampiran/1785496444169_original_Telkom-FS-English-TW-II-2026.pdf`; its SHA-256 when retrieved in this audit was `c89b226b35899d7f18490004b5b4451107f9d099ece77cbac33aa96aa5c6c6ee`.

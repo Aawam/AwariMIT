@@ -11,6 +11,8 @@ import type { Stock } from '../domain/types'
 import { normalizeCsvCapture, updateFromInput, updateFromSnapshot, validateMarketSnapshot } from '../../scripts/refresh-market-snapshot.mjs'
 // @ts-expect-error The optional Hermes adapter is plain Node ESM, exercised here by Vitest.
 import { captureHermesOhlcv, normalizeHermesOhlcvPayload } from '../../scripts/capture-hermes-ohlcv.mjs'
+// @ts-expect-error The optional Telkom issuer-PDF adapter is plain Node ESM, exercised here by Vitest.
+import { captureTelkomH12026Fundamentals, normalizeTelkomH12026Pages, updateFundamentalSnapshot, validateFundamentalSnapshot } from '../../scripts/capture-telkom-fundamentals.mjs'
 
 const baseStock: Stock = {
   ticker: 'TEST', name: 'Test Company', sector: 'Test', profile: 'BANKING', description: 'Test fixture.',
@@ -170,6 +172,47 @@ describe('Hermes OHLCV adapter', () => {
     await writeFile(output, 'previous valid snapshot')
     const invalid = normalizeHermesOhlcvPayload({ ...skillPayload, bars: [{ ...skillPayload.bars[0], low: 2600 }] }, 'TLKM', retrievedAt)
     expect((await updateFromSnapshot(invalid, output, 'TLKM')).status).toBe('FAILED')
+    expect(await readFile(output, 'utf8')).toBe('previous valid snapshot')
+  })
+})
+
+describe('Telkom official fundamental adapter', () => {
+  const pages = [
+    'PT TELEKOMUNIKASI INDONESIA Tbk. AND ITS SUBSIDIARIES CONSOLIDATED FINANCIAL STATEMENTS for the six-month period then ended. Jakarta, July 31, 2026',
+    'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION As of June 30, 2026 TOTAL ASSETS 303,087 TOTAL EQUITY 134,848',
+    'CONSOLIDATED STATEMENTS OF PROFIT OR LOSS For the Six Months Period Ended June 30, 2026 and 2025 REVENUES 23,33 75,878 73,004 OPERATING PROFIT 20,133 PROFIT FOR THE PERIOD 14,206 Profit per share 107.50',
+    'CONSOLIDATED STATEMENTS OF CASH FLOWS Net cash provided by operating activities 34,862',
+  ]
+  const retrievedAt = '2026-09-19T08:00:00.000Z'
+
+  it('normalizes reported H1 values from the official issuer PDF with complete provenance', () => {
+    const snapshot = normalizeTelkomH12026Pages(pages, retrievedAt)
+    expect(snapshot.status).toBeUndefined()
+    expect(snapshot.ticker).toBe('TLKM')
+    expect(snapshot.reportingPeriod).toBe('H1 2026, six months ended 30 June 2026')
+    expect(snapshot.publicationDate).toBe('2026-07-31')
+    expect(snapshot.sourceQuality).toBe('OFFICIAL_ISSUER')
+    expect(snapshot.consolidation).toBe('Consolidated')
+    expect(snapshot.sourceUrl).toContain('telkom.co.id/minio')
+    expect(snapshot.metrics).toEqual(expect.arrayContaining([{ key: 'revenue', name: 'Revenue', value: 75_878, unit: 'IDR billion', status: 'REPORTED' }, { key: 'basicEps', name: 'Basic earnings per share', value: 107.5, unit: 'IDR per share', status: 'REPORTED' }]))
+    expect(validateFundamentalSnapshot(snapshot, 'TLKM')).toHaveLength(0)
+  })
+
+  it('rejects incomplete documents, malformed extractor output, provider failures, and ticker mismatch', async () => {
+    expect(normalizeTelkomH12026Pages(pages.slice(0, 3), retrievedAt)).toEqual({ status: 'FAILED', errors: ['Official Telkom PDF extraction returned incomplete pages.'] })
+    const malformed = await captureTelkomH12026Fundamentals({ fetchDocument: async () => ({ ok: true, headers: { get: () => 'application/pdf' }, arrayBuffer: async () => new ArrayBuffer(0) }), extract: async () => ({ exitCode: 0, stdout: '{', stderr: '' }) })
+    const unavailable = await captureTelkomH12026Fundamentals({ fetchDocument: async () => ({ ok: false, status: 503 }) })
+    expect(malformed).toEqual({ status: 'FAILED', errors: ['PDF extractor returned malformed JSON.'] })
+    expect(unavailable).toEqual({ status: 'FAILED', errors: ['Telkom report returned HTTP 503.'] })
+    expect(validateFundamentalSnapshot({ ...normalizeTelkomH12026Pages(pages, retrievedAt), ticker: 'BBCA' }, 'TLKM')).not.toHaveLength(0)
+  })
+
+  it('preserves a prior fundamental snapshot when an invalid provider result is rejected', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'awarimit-tlkm-fundamentals-'))
+    const output = join(directory, 'tlkm.ts')
+    await writeFile(output, 'previous valid snapshot')
+    const invalid = { ...normalizeTelkomH12026Pages(pages, retrievedAt), metrics: [] }
+    expect((await updateFundamentalSnapshot(invalid, output)).status).toBe('FAILED')
     expect(await readFile(output, 'utf8')).toBe('previous valid snapshot')
   })
 })

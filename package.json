@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "data:update": "node scripts/refresh-market-snapshot.mjs",
     "data:ingest": "node scripts/refresh-market-snapshot.mjs",
-    "data:fetch:hermes": "node scripts/capture-hermes-ohlcv.mjs"
+    "data:fetch:hermes": "node scripts/capture-hermes-ohlcv.mjs",
+    "data:fetch:telkom-fundamentals": "node scripts/capture-telkom-fundamentals.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
