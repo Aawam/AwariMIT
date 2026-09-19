@@ -26,6 +26,8 @@ JSON requires `ticker`, `source`, `sourceUrl`, `attribution`, `exportedAt`, `ret
 
 The command does not fetch providers, scrape pages, bypass rate limits, or use credentials. It rejects a `--ticker` mismatch, malformed/duplicate/out-of-order dates, missing provenance, non-finite or non-positive OHLC values, negative volume, and inconsistent high/low bars before atomically replacing the requested output. Invalid, empty, unreadable, or malformed input returns FAILED and leaves the prior valid output in place. Identical normalized content returns UNCHANGED.
 
+`npm run data:fetch:hermes -- --ticker TICKER --output /absolute/path/to/tickerPriceBars.ts` is an optional dynamic acquisition path. It invokes the external MIT-licensed `hermes-market-skills` `saham_idn` feed (configured with `AWARIMIT_HERMES_MARKET_SKILLS_ROOT` and optionally `AWARIMIT_HERMES_MARKET_PYTHON`), normalizes its Yahoo Finance OHLCV result, and then uses this same validation/write boundary. It does not add Python dependencies, provider response shapes, credentials, or trading verdict logic to AwariMIT. It preserves provider attribution and leaves the output unchanged on provider, JSON, ticker, or bar validation failure. See `docs/MARKET_DATA_REUSE_DECISIONS.md` for evidence and access limitations.
+
 ## Issuer events
 
 `NewsProvider` currently presents official issuer filing facts and issuer events, not live news. Every record includes its publication date and source URL. No market outcome or trade signal is inferred.
@@ -36,4 +38,4 @@ V0.3 is complete, but its cross-sector empirical proof is carried forward. TLKM 
 
 ## Constraints
 
-IDX automated access returned HTTP 403 from this environment. No paid source, credential, API key, or unclear-provider integration was added. A licensed/authorized production market provider remains future work.
+IDX automated access returned HTTP 403 from this environment, including the session/header pattern used by the MIT-licensed IDX-API reference project. No paid source, credential, API key, or unclear-provider integration was added. A licensed/authorized production market provider remains future work.

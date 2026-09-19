@@ -8,7 +8,9 @@ import { availableFundamentalEvidence, businessProfiles } from '../config/busine
 import { bbcaAnnualReference, bbcaH12026Snapshot, bbcaReference, bbcaTechnicalReference } from '../data/marketData'
 import type { Stock } from '../domain/types'
 // @ts-expect-error The executable refresh boundary is plain Node ESM, exercised here by Vitest.
-import { normalizeCsvCapture, updateFromInput, validateMarketSnapshot } from '../../scripts/refresh-market-snapshot.mjs'
+import { normalizeCsvCapture, updateFromInput, updateFromSnapshot, validateMarketSnapshot } from '../../scripts/refresh-market-snapshot.mjs'
+// @ts-expect-error The optional Hermes adapter is plain Node ESM, exercised here by Vitest.
+import { captureHermesOhlcv, normalizeHermesOhlcvPayload } from '../../scripts/capture-hermes-ohlcv.mjs'
 
 const baseStock: Stock = {
   ticker: 'TEST', name: 'Test Company', sector: 'Test', profile: 'BANKING', description: 'Test fixture.',
@@ -129,5 +131,45 @@ describe('market refresh validation', () => {
     await writeFile(input, csv)
     expect((await updateFromInput(input, output, 'TLKM')).status).toBe('UPDATED')
     expect(await readFile(output, 'utf8')).toContain('Attribution: Example data provider attribution')
+  })
+})
+
+describe('Hermes OHLCV adapter', () => {
+  const skillPayload = { ticker: 'TLKM.JK', bars: [{ date: '2026-09-17', open: 2500, high: 2550, low: 2475, close: 2525, volume: 1_000_000 }, { date: '2026-09-18', open: 2525, high: 2600, low: 2500, close: 2575, volume: 1_200_000 }] }
+  const retrievedAt = '2026-09-18T03:00:00.000Z'
+
+  it('normalizes multi-ticker skill bars into the existing canonical snapshot with provenance', () => {
+    const snapshot = normalizeHermesOhlcvPayload(skillPayload, 'TLKM', retrievedAt)
+    expect(snapshot.status).toBeUndefined()
+    expect(snapshot.ticker).toBe('TLKM')
+    expect(snapshot.source).toContain('hermes-market-skills')
+    expect(snapshot.sourceUrl).toBe('https://finance.yahoo.com/quote/TLKM.JK/history')
+    expect(snapshot.retrievedAt).toBe(retrievedAt)
+    expect(validateMarketSnapshot(snapshot, 'TLKM')).toHaveLength(0)
+  })
+
+  it('rejects malformed, missing, and ticker-mismatched skill payloads', () => {
+    expect(normalizeHermesOhlcvPayload(undefined, 'TLKM').status).toBe('FAILED')
+    expect(normalizeHermesOhlcvPayload({ ticker: 'TLKM.JK', bars: [] }, 'TLKM').status).toBe('FAILED')
+    expect(normalizeHermesOhlcvPayload({ ...skillPayload, ticker: 'BBCA.JK' }, 'TLKM').status).toBe('FAILED')
+    const malformedBar = normalizeHermesOhlcvPayload({ ...skillPayload, bars: [{ ...skillPayload.bars[0], high: 'bad' }] }, 'TLKM')
+    expect(malformedBar.status).toBeUndefined()
+    expect(validateMarketSnapshot(malformedBar, 'TLKM')).not.toHaveLength(0)
+  })
+
+  it('reports provider process and JSON failures without writing a snapshot', async () => {
+    const failedProcess = await captureHermesOhlcv('TLKM', { skillRoot: '/test/skill', execute: async () => ({ exitCode: 1, stdout: '', stderr: 'rate limited' }) })
+    const malformedJson = await captureHermesOhlcv('TLKM', { skillRoot: '/test/skill', execute: async () => ({ exitCode: 0, stdout: '{', stderr: '' }) })
+    expect(failedProcess).toEqual({ status: 'FAILED', errors: ['Hermes market skill failed: rate limited'] })
+    expect(malformedJson).toEqual({ status: 'FAILED', errors: ['Hermes market skill returned malformed JSON.'] })
+  })
+
+  it('preserves a prior snapshot when normalized provider data fails validation', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'awarimit-hermes-'))
+    const output = join(directory, 'tlkm.ts')
+    await writeFile(output, 'previous valid snapshot')
+    const invalid = normalizeHermesOhlcvPayload({ ...skillPayload, bars: [{ ...skillPayload.bars[0], low: 2600 }] }, 'TLKM', retrievedAt)
+    expect((await updateFromSnapshot(invalid, output, 'TLKM')).status).toBe('FAILED')
+    expect(await readFile(output, 'utf8')).toBe('previous valid snapshot')
   })
 })

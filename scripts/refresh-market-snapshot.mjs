@@ -98,6 +98,15 @@ export async function safelyWriteSnapshot(outputPath, content) {
   return 'UPDATED'
 }
 
+export async function updateFromSnapshot(snapshot, outputPath, expectedTicker) {
+  const errors = validateMarketSnapshot(snapshot, expectedTicker)
+  if (errors.length) return { status: 'FAILED', errors }
+  const content = renderSnapshot(snapshot)
+  const status = await safelyWriteSnapshot(outputPath, content)
+  const digest = createHash('sha256').update(content).digest('hex').slice(0, 12)
+  return { status, ticker: snapshot.ticker, sessions: snapshot.bars.length, latestSession: snapshot.bars.at(-1).date, digest }
+}
+
 export async function updateFromInput(inputPath, outputPath, expectedTicker) {
   let raw
   try { raw = await readFile(resolve(inputPath), 'utf8') } catch (error) { return { status: 'FAILED', errors: [`Unable to read input: ${error.message}`] } }
@@ -109,12 +118,7 @@ export async function updateFromInput(inputPath, outputPath, expectedTicker) {
   } else {
     try { snapshot = JSON.parse(raw) } catch { return { status: 'FAILED', errors: ['Input is not valid JSON. Use .csv for portable CSV input.'] } }
   }
-  const errors = validateMarketSnapshot(snapshot, expectedTicker)
-  if (errors.length) return { status: 'FAILED', errors }
-  const content = renderSnapshot(snapshot)
-  const status = await safelyWriteSnapshot(outputPath, content)
-  const digest = createHash('sha256').update(content).digest('hex').slice(0, 12)
-  return { status, ticker: snapshot.ticker, sessions: snapshot.bars.length, latestSession: snapshot.bars.at(-1).date, digest }
+  return updateFromSnapshot(snapshot, outputPath, expectedTicker)
 }
 
 async function main() {
